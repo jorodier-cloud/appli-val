@@ -1,188 +1,79 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BookOpen, ClipboardCheck, FileText, PencilRuler } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { FichesManager } from "@/components/fiches-manager";
-import {
-  useNiveaux,
-  useAllProgressionItems,
-  useAllSupportsCours,
-  useAllFichesExercices,
-  useAllEvaluationsGenerees,
-} from "@/lib/store";
+import { useAllRessources } from "@/lib/store";
+import { ResourceModal, LABEL_RESSOURCE } from "@/components/resource-modal";
 
-interface ContenuCard {
-  id: string;
-  icon: typeof BookOpen;
-  typeLabel: string;
-  niveauNom: string;
-  chapitreTitre: string;
-  createdAtISO: string;
-}
-
-function useContenuGenere(): ContenuCard[] {
-  const niveaux = useNiveaux();
-  const progressionItems = useAllProgressionItems();
-  const supportsCours = useAllSupportsCours();
-  const fichesExercices = useAllFichesExercices();
-  const evaluationsGenerees = useAllEvaluationsGenerees();
-
-  return useMemo(() => {
-    const niveauNomByItemId = new Map(
-      progressionItems.map((item) => [
-        item.id,
-        { niveauNom: niveaux.find((n) => n.id === item.niveauId)?.nom ?? "?", titre: item.titre },
-      ])
-    );
-
-    const cards: ContenuCard[] = [];
-
-    supportsCours.forEach((s) => {
-      const ctx = niveauNomByItemId.get(s.progressionItemId);
-      if (!ctx) return;
-      cards.push({
-        id: s.id,
-        icon: BookOpen,
-        typeLabel: "Support de cours",
-        niveauNom: ctx.niveauNom,
-        chapitreTitre: ctx.titre,
-        createdAtISO: s.createdAtISO,
-      });
-    });
-
-    fichesExercices.forEach((f) => {
-      const ctx = niveauNomByItemId.get(f.progressionItemId);
-      if (!ctx) return;
-      cards.push({
-        id: f.id,
-        icon: PencilRuler,
-        typeLabel: "Fiche d'exercices",
-        niveauNom: ctx.niveauNom,
-        chapitreTitre: ctx.titre,
-        createdAtISO: f.createdAtISO,
-      });
-    });
-
-    evaluationsGenerees.forEach((e) => {
-      const ctx = niveauNomByItemId.get(e.progressionItemId);
-      if (!ctx) return;
-      cards.push({
-        id: e.id,
-        icon: ClipboardCheck,
-        typeLabel: "Évaluation générée",
-        niveauNom: ctx.niveauNom,
-        chapitreTitre: ctx.titre,
-        createdAtISO: e.createdAtISO,
-      });
-    });
-
-    return cards.sort((a, b) => b.createdAtISO.localeCompare(a.createdAtISO));
-  }, [niveaux, progressionItems, supportsCours, fichesExercices, evaluationsGenerees]);
-}
-
-function ContenuGenereSection() {
-  const cards = useContenuGenere();
+export function BanqueRessources() {
+  const ressources = useAllRessources();
   const [filtreNiveau, setFiltreNiveau] = useState("");
+  const [openRessourceId, setOpenRessourceId] = useState<string | null>(null);
 
   const niveauxDisponibles = useMemo(
-    () => Array.from(new Set(cards.map((c) => c.niveauNom))).sort(),
-    [cards]
+    () => Array.from(new Set(ressources.map((r) => r.niveauNom))).sort(),
+    [ressources]
   );
 
-  const filtered = filtreNiveau ? cards.filter((c) => c.niveauNom === filtreNiveau) : cards;
-
-  if (cards.length === 0) {
-    return (
-      <p className="text-sm text-ink-soft">
-        Aucun contenu généré pour l&apos;instant — rendez-vous dans l&apos;onglet
-        « Générateur de supports ».
-      </p>
-    );
-  }
+  const filtered = useMemo(
+    () =>
+      [...ressources]
+        .filter((r) => !filtreNiveau || r.niveauNom === filtreNiveau)
+        .reverse(),
+    [ressources, filtreNiveau]
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      {niveauxDisponibles.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => setFiltreNiveau("")}
-            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-              filtreNiveau === ""
-                ? "border-terracotta bg-terracotta/10 text-terracotta-deep"
-                : "border-line text-ink-soft hover:bg-card"
-            }`}
+    <div className="flex flex-col gap-6">
+      {niveauxDisponibles.length > 0 && (
+        <div className="max-w-xs">
+          <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+            Filtrer par niveau
+          </label>
+          <select
+            value={filtreNiveau}
+            onChange={(e) => setFiltreNiveau(e.target.value)}
+            className="w-full rounded-lg border border-line bg-white p-2.5 text-sm text-ink focus:border-terracotta-deep focus:outline-none focus:ring-1 focus:ring-terracotta-deep"
           >
-            Tous les niveaux
-          </button>
-          {niveauxDisponibles.map((niveauNom) => (
+            <option value="">Tous</option>
+            {niveauxDisponibles.map((nom) => (
+              <option key={nom} value={nom}>
+                {nom}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
+        <p className="text-sm text-ink-soft">Aucun support enregistré pour ce filtre.</p>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((r) => (
             <button
-              key={niveauNom}
+              key={r.id}
               type="button"
-              onClick={() => setFiltreNiveau(niveauNom)}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                filtreNiveau === niveauNom
-                  ? "border-terracotta bg-terracotta/10 text-terracotta-deep"
-                  : "border-line text-ink-soft hover:bg-card"
-              }`}
+              onClick={() => setOpenRessourceId(r.id)}
+              className="rounded-2xl border border-line bg-card p-4 text-left shadow-[var(--shadow-riwaq)] transition-colors hover:border-terracotta"
             >
-              {niveauNom}
+              <span className="mb-1.5 block text-[10.5px] font-bold uppercase tracking-wide text-terracotta-deep">
+                {r.niveauNom} · {LABEL_RESSOURCE[r.type]}
+              </span>
+              <h3 className="mb-1.5 text-[15px] font-semibold leading-snug text-ink">
+                {r.chapitreTitre}
+              </h3>
+              <p className="text-xs text-ink-soft">
+                {new Date(r.createdAtISO).toLocaleDateString("fr-FR", {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </p>
             </button>
           ))}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((card) => {
-          const Icon = card.icon;
-          return (
-            <div key={card.id} className="rounded-xl border border-line bg-card p-4">
-              <span className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wide text-terracotta-deep">
-                <Icon className="h-3.5 w-3.5" />
-                {card.niveauNom} · {card.typeLabel}
-              </span>
-              <h3 className="text-sm font-semibold text-ink">{card.chapitreTitre}</h3>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-export function BanqueRessources() {
-  return (
-    <div className="flex flex-col gap-10">
-      <div className="flex flex-col gap-4">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-ink-soft">
-          <FileText className="h-4 w-4" />
-          Contenu pédagogique généré
-        </h2>
-        <ContenuGenereSection />
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-soft">
-          Fiches gestion de classe
-        </h2>
-        <FichesManager
-          type="gestion-classe"
-          themePlaceholder="Thème (ex : Autorité, Différenciation, Élèves à besoins particuliers…)"
-          emptyLabel="Aucune fiche pour l'instant — créez-en une ci-dessus."
-        />
-      </div>
-
-      <div className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-ink-soft">
-          Fiches méthodologiques — apprendre à apprendre
-        </h2>
-        <FichesManager
-          type="methodologie"
-          themePlaceholder="Thème (ex : Organisation, Mémorisation, Gestion du stress…)"
-          emptyLabel="Aucune fiche méthodologique pour l'instant — créez-en une ci-dessus."
-        />
-      </div>
+      <ResourceModal ressourceId={openRessourceId} onClose={() => setOpenRessourceId(null)} />
     </div>
   );
 }

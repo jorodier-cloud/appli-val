@@ -14,8 +14,7 @@
     "react-dom": "19.2.8",
     "@mistralai/mistralai": "^2.6.4",
     "zod": "^4.4.3",
-    "katex": "^0.18.4",
-    "react-katex": "^3.1.0",
+    "mammoth": "^1.8.0",
     "lucide-react": "^1.33.0",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.6.0"
@@ -25,7 +24,6 @@
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/react-katex": "^3.0.4",
     "tailwindcss": "^4.3.3",
     "@tailwindcss/postcss": "^4.3.3"
   }

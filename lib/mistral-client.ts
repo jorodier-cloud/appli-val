@@ -83,3 +83,54 @@ export async function callMistralStructured<T>({
     return { ok: false, error: describeMistralError(error) };
   }
 }
+
+interface MistralTextCallInput {
+  systemPrompt: string;
+  userContent: UserContent;
+  maxTokens?: number;
+}
+
+/**
+ * Appel Mistral en texte libre (markdown), pour les contenus pédagogiques
+ * (synthèse, fiche, évaluation, Rapidos, corrigé) qui n'ont pas besoin d'un
+ * schéma JSON structuré — juste un document prêt à afficher.
+ */
+export async function callMistralText({
+  systemPrompt,
+  userContent,
+  maxTokens = 3000,
+}: MistralTextCallInput): Promise<MistralCallResult<string>> {
+  if (!process.env.MISTRAL_API_KEY) {
+    return {
+      ok: false,
+      error: "Clé API Mistral manquante. Définissez MISTRAL_API_KEY dans .env.local.",
+    };
+  }
+
+  const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY, server: "eu" });
+
+  try {
+    const response = await client.chat.complete({
+      model: "mistral-medium-latest",
+      maxTokens,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+    });
+
+    const choice = response.choices?.[0];
+
+    const finishReasonError = describeFinishReasonError(choice?.finishReason);
+    if (finishReasonError) return { ok: false, error: finishReasonError };
+
+    const content = choice?.message?.content;
+    if (typeof content !== "string" || !content.trim()) {
+      return { ok: false, error: "Impossible d'interpréter la réponse du modèle." };
+    }
+
+    return { ok: true, data: content.trim() };
+  } catch (error) {
+    return { ok: false, error: describeMistralError(error) };
+  }
+}

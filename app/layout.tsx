@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Work_Sans } from "next/font/google";
-import "katex/dist/katex.min.css";
 import "./globals.css";
 import { SidebarNav } from "@/components/sidebar-nav";
 
