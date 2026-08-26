@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-sable: #f1e6d2;
+  --color-card: #fbf5e8;
+  --color-ink: #2c2116;
+  --color-ink-soft: #6b5d4c;
+  --color-terracotta: #b4522c;
+  --color-terracotta-deep: #8f3f22;
+  --color-ochre: #c7902e;
+  --color-sauge: #425c45;
+  --color-sauge-light: #6e8a6c;
+  --color-line: #dfcca9;
+
+  --font-display: var(--font-fraunces), serif;
+  --font-sans: var(--font-work-sans), sans-serif;
+}
+
+:root {
+  --shadow-riwaq: 0 10px 30px -12px rgba(44, 33, 22, 0.18);
+}
+
+body {
+  background-color: var(--color-sable);
+  background-image: radial-gradient(circle at 100% 0%, #f7ecd6 0%, transparent 45%);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+/* Motif d'arche, élément signature de l'identité Riwaq : une demi-lune posée sur
+   le coin supérieur de la carte, couleur pilotée par --arch-color. */
+.arch-top {
+  position: relative;
+  padding-top: 34px;
+}
+.arch-top::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 999px 999px 0 0;
+  background: var(--arch-color, var(--color-terracotta));
+}
