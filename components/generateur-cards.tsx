@@ -106,10 +106,12 @@ function NiveauChapitreFields({
 function GenerationCard({
   type,
   notes,
+  etablissement,
   onGenerated,
 }: {
   type: TypeSupport;
   notes: string;
+  etablissement: string;
   onGenerated: (ressourceId: string) => void;
 }) {
   const meta = CARD_META[type];
@@ -127,7 +129,7 @@ function GenerationCard({
     }
     setError(null);
     startTransition(async () => {
-      const result = await generateSupport({ type, niveauNom, chapitreTitre, notes });
+      const result = await generateSupport({ type, niveauNom, chapitreTitre, notes, etablissement });
       if (!result.ok) {
         setError(result.error);
         return;
@@ -304,18 +306,38 @@ function RapidosCard({ notes, onGenerated }: { notes: string; onGenerated: (ress
 
 export function GenerateurCards() {
   const [notes, setNotes] = useState("");
+  const [etablissement, setEtablissement] = useState("");
   const [openRessourceId, setOpenRessourceId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? window.localStorage.getItem("riwaq:etablissement") : null;
+    if (saved) setEtablissement(saved);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") window.localStorage.setItem("riwaq:etablissement", etablissement);
+  }, [etablissement]);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
-        <GenerationCard type="synthese" notes={notes} onGenerated={setOpenRessourceId} />
-        <GenerationCard type="fiche" notes={notes} onGenerated={setOpenRessourceId} />
-        <GenerationCard type="evaluation" notes={notes} onGenerated={setOpenRessourceId} />
+        <GenerationCard type="synthese" notes={notes} etablissement={etablissement} onGenerated={setOpenRessourceId} />
+        <GenerationCard type="fiche" notes={notes} etablissement={etablissement} onGenerated={setOpenRessourceId} />
+        <GenerationCard type="evaluation" notes={notes} etablissement={etablissement} onGenerated={setOpenRessourceId} />
         <RapidosCard notes={notes} onGenerated={setOpenRessourceId} />
       </div>
 
       <div className="max-w-xl">
+        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+          Établissement (en-tête des synthèses)
+        </label>
+        <input
+          type="text"
+          value={etablissement}
+          onChange={(e) => setEtablissement(e.target.value)}
+          placeholder="Ex. : Lycée Français Victor Hugo"
+          className="mb-4 w-full rounded-lg border border-line bg-white p-2.5 text-sm text-ink focus:border-terracotta-deep focus:outline-none focus:ring-1 focus:ring-terracotta-deep"
+        />
         <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
           Consignes complémentaires (facultatif)
         </label>
