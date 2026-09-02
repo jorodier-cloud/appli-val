@@ -20,7 +20,7 @@ export type GenerateRapidosResponse =
 function rapidosBase(input: GenerateRapidosInput): string {
   const traites = input.chapitresTraites.length
     ? input.chapitresTraites.join(", ")
-    : "aucun chapitre encore traité";
+    : "aucun chapitre encore coché comme traité";
 
   let source: string;
   if (input.source === "annee") {
@@ -35,24 +35,55 @@ function rapidosBase(input: GenerateRapidosInput): string {
     ? `\n\nPriorité de réactivation : les évaluations récentes ont signalé ces notions comme mal maîtrisées par la classe — ${input.notionsAReactiver.join(" ; ")}. Fais-les revenir plus souvent que les autres dans la série.`
     : "";
 
-  return `Tu es professeur de mathématiques dans le système scolaire français, niveau ${input.niveauNom}. Tu prépares des « Rapidos » : un rituel de début de séance, 5 questions très courtes, calculables mentalement ou en deux lignes, en 5 minutes maximum.
+  return `Tu es professeur de mathématiques dans le système scolaire français, niveau ${input.niveauNom}. Tu prépares des « Rapidos » : un rituel de début de séance, 5 questions très courtes, traitables mentalement ou en deux lignes, en 5 minutes maximum.
 
 ${source}${prio}
 
-Contraintes : questions courtes et sans contexte inutile, réponses non ambiguës, difficulté régulière d'un Rapido à l'autre, chaque notion revenant à intervalles espacés sur l'ensemble de la série. Réponds en Markdown sobre, prêt à imprimer en noir et blanc, sans préambule ni commentaire.${input.notes.trim() ? `\n\nContrainte supplémentaire : ${input.notes.trim()}` : ""}`;
+Exigence de niveau, impérative : les questions doivent être dignes d'un élève de ${input.niveauNom}. Sont formellement exclues les questions de niveau primaire (tables de multiplication simples, « le double de 12 », « la moitié de 20 », additions à un chiffre). Vise le niveau d'un exercice de calcul mental exigeant du programme : opérations sur les relatifs et les fractions, puissances et écriture scientifique, calcul littéral, proportionnalité et pourcentages, divisibilité et PGCD, conversions d'unités, géométrie de base.
+
+Exigence de variété, impérative : sur l'ensemble de la série, ne répète JAMAIS deux fois la même question à l'identique, et ne redonne pas la même valeur numérique pour une même notion. Chaque notion revient à intervalles espacés, mais toujours sous une forme ou avec des nombres différents.
+
+Ne sors jamais du programme du niveau ${input.niveauNom}.${input.notes.trim() ? `\n\nContrainte supplémentaire : ${input.notes.trim()}` : ""}`;
 }
 
 function rapidosPrompt(input: GenerateRapidosInput, start: number, end: number): string {
   return (
     rapidosBase(input) +
-    `\n\nRédige les Rapidos n° ${start} à ${end} d'une série de ${input.nb}. Pour chacun : un titre « ## Rapido n° X », les 5 questions numérotées, puis une ligne « **Réponses :** » avec les 5 réponses séparées par des points-virgules.`
+    `
+
+Produis les Rapidos numérotés de ${start} à ${end} (soit ${end - start + 1} Rapidos), regroupés deux par deux en tableaux Markdown à deux colonnes, un Rapido par colonne. Respecte EXACTEMENT ce format, sans rien ajouter autour :
+
+| Rapido ${start} | Rapido ${start + 1} |
+|---|---|
+| item 1 | item 1 |
+| item 2 | item 2 |
+| item 3 | item 3 |
+| item 4 | item 4 |
+| item 5 (conversion d'unité) | item 5 (conversion d'unité) |
+
+(puis un tableau identique pour la paire suivante s'il en reste, séparé par une ligne vide)
+
+Ne mets AUCUNE réponse ni corrigé : ce sont des feuilles vierges que les élèves complètent en classe, la correction se fait à l'oral juste après.
+
+Chaque Rapido contient exactement 5 items :
+- 2 ou 3 calculs directs à compléter, l'item se terminant par « = » pour que l'élève écrive la réponse à la suite
+- 1 ou 2 questions verbales courtes (« Calculer… », « Donner… », « Vrai / Faux : … », « Compléter : … »), sans « = » final
+- le dernier item est toujours une courte conversion d'unité à compléter (durée, longueur, aire, volume), au format « 0,25 h = ……… min »
+
+N'utilise ni LaTeX ni émoji : notation courante uniquement (×, ÷, exposants Unicode comme 3² ou 10⁻⁴, fractions sous la forme a/b, racines sous la forme √16).`
   );
 }
 
 function rapidosTestPrompt(input: GenerateRapidosInput): string {
   return (
     rapidosBase(input) +
-    `\n\nRédige maintenant le test de fin de série, qui suit les ${input.nb} Rapidos. Titre « ## Test de fin de série ». 10 questions numérotées, reprenant les notions travaillées dans les Rapidos, un peu plus exigeantes mais toujours courtes. Durée 15 minutes, noté sur 10. Termine par « ### Corrigé » avec les 10 réponses.`
+    `
+
+Rédige maintenant le test de fin de série, qui suit les ${input.nb} Rapidos. Titre « # Test de fin de série ». 10 questions numérotées, reprenant les notions travaillées dans les Rapidos, un peu plus exigeantes mais toujours courtes. Durée 15 minutes, noté sur 10. Termine par « ## Corrigé » suivi des 10 réponses numérotées.
+
+Comme le test est un écrit noté, il conserve son corrigé (contrairement aux Rapidos eux-mêmes).
+
+N'utilise ni LaTeX ni émoji : notation courante uniquement (×, ÷, exposants Unicode, fractions sous la forme a/b, racines sous la forme √16).`
   );
 }
 
@@ -83,11 +114,18 @@ export async function generateRapidosSerie(
     maxTokens: 1800,
   });
   if (!testResult.ok) return { ok: false, error: testResult.error };
-  parts.push(testResult.data);
+
+  const cadence = input.nb >= 12 ? "3 à 4" : "3";
+  const enTete =
+    `%%TITREBOX%% Rapido-Maths ${input.niveauNom}\n\n` +
+    `**Rituel : en arrivant en classe, vous sortez la fiche rapido-maths et vous faites le rapido demandé. Cela doit devenir un automatisme.**\n` +
+    `**La correction sera faite ensemble. Il faudra revoir ces rapidos régulièrement : toutes les ${cadence} semaines, il y aura une évaluation sur les rapidos effectués.**\n\n`;
 
   const content =
-    `# Rapidos — ${input.niveauNom}\n\nRituel de début de séance : 5 questions courtes, ${input.nb} séances puis test de 10 questions.\n\n---\n\n` +
-    parts.join("\n\n---\n\n");
+    enTete +
+    parts.join("\n\n") +
+    `\n\n*Prochaine séance : test sur ces ${input.nb} rapidos.*\n\n---\n\n` +
+    testResult.data;
 
   return { ok: true, content };
 }
