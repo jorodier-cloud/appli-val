@@ -44,3 +44,35 @@ body {
   border-radius: 999px 999px 0 0;
   background: var(--arch-color, var(--color-terracotta));
 }
+
+/* Rendu des contenus générés par l'IA (lib/markdown.ts produit du HTML brut). */
+.doc-content h1 {
+  margin: 14px 0 8px;
+  font-family: var(--font-display);
+  font-size: 20px;
+}
+.doc-content h2 {
+  margin: 16px 0 7px;
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+.doc-content h3 {
+  margin: 13px 0 6px;
+  font-family: var(--font-display);
+  font-size: 15px;
+}
+.doc-content p {
+  margin: 8px 0;
+}
+.doc-content ul {
+  margin: 8px 0 8px 22px;
+  list-style: disc;
+}
+.doc-content li {
+  margin: 4px 0;
+}
+.doc-content hr {
+  margin: 16px 0;
+  border: none;
+  border-top: 1px solid var(--color-line);
+}

@@ -1,169 +1,148 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  useClasses,
-  useNiveaux,
-  useAllProgressionItems,
-  useAllEleves,
-  useAllEvaluations,
-  useAllNotes,
-  useAllSupportsCours,
-  useAllFichesExercices,
-  useAllEvaluationsGenerees,
-  useAllEvaluationCompetences,
-} from "@/lib/store";
-import { summarizeClasse } from "@/lib/dashboard";
-import { tauxAcquisition } from "@/lib/competences";
+import { useNiveaux, useAllProgressionItems, useAllRessources, useAllEvaluations } from "@/lib/store";
+import { summarizeNiveau } from "@/lib/dashboard";
+import { BackupControls } from "@/components/backup-controls";
+import { ResourceModal, LABEL_RESSOURCE } from "@/components/resource-modal";
 
 const ARCH_COLORS = ["var(--color-sauge)", "var(--color-terracotta)", "var(--color-ochre)"];
 
 export function Dashboard() {
-  const classes = useClasses();
   const niveaux = useNiveaux();
   const progressionItems = useAllProgressionItems();
-  const eleves = useAllEleves();
+  const ressources = useAllRessources();
   const evaluations = useAllEvaluations();
-  const notes = useAllNotes();
-  const supportsCours = useAllSupportsCours();
-  const fichesExercices = useAllFichesExercices();
-  const evaluationsGenerees = useAllEvaluationsGenerees();
-  const evaluationCompetences = useAllEvaluationCompetences();
-
-  // Stable pour la durée du rendu, calculé une fois au montage plutôt qu'à
-  // chaque re-render (évite un recalcul de todayISO en boucle avec useMemo []).
-  const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const [openRessourceId, setOpenRessourceId] = useState<string | null>(null);
 
   const summaries = useMemo(
+    () => niveaux.map((n) => summarizeNiveau(n, progressionItems)),
+    [niveaux, progressionItems]
+  );
+
+  const aRestituer = useMemo(
     () =>
-      classes.map((c) =>
-        summarizeClasse(c, niveaux, progressionItems, eleves, evaluations, notes, todayISO)
-      ),
-    [classes, niveaux, progressionItems, eleves, evaluations, notes, todayISO]
+      evaluations.filter((e) => e.corrigeRessourceId && !e.restituee).map((e) => ({
+        ...e,
+        niveauNom: niveaux.find((n) => n.id === e.niveauId)?.nom ?? "",
+      })),
+    [evaluations, niveaux]
   );
 
-  const fichesGenereesCetteSemaine = useMemo(() => {
-    const seuil = new Date();
-    seuil.setDate(seuil.getDate() - 7);
-    const seuilISO = seuil.toISOString();
-    return [...supportsCours, ...fichesExercices, ...evaluationsGenerees].filter(
-      (c) => c.createdAtISO >= seuilISO
-    ).length;
-  }, [supportsCours, fichesExercices, evaluationsGenerees]);
-
-  const tauxMoyen = tauxAcquisition(evaluationCompetences);
-
-  const derniereNote = useMemo(
-    () => [...notes].sort((a, b) => b.updatedAtISO.localeCompare(a.updatedAtISO))[0] ?? null,
-    [notes]
-  );
-  const derniereEvaluation = derniereNote
-    ? evaluations.find((e) => e.id === derniereNote.evaluationId) ?? null
-    : null;
-  const derniereClasse = derniereEvaluation
-    ? classes.find((c) => c.id === derniereEvaluation.classeId) ?? null
-    : null;
+  const derniersSupports = useMemo(() => ressources.slice(-3).reverse(), [ressources]);
 
   return (
     <div className="flex flex-col gap-8">
-      {classes.length === 0 ? (
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-terracotta/40 bg-card p-5">
+        <div>
+          <strong className="mb-1 block text-sm text-ink">Sauvegarde manuelle</strong>
+          <span className="text-[12.5px] text-ink-soft">
+            Vos données sont déjà enregistrées automatiquement dans ce navigateur. Exportez une
+            copie de temps en temps pour vous prémunir d&apos;un vidage du cache.
+          </span>
+        </div>
+        <BackupControls variant="inline" />
+      </div>
+
+      {aRestituer.length > 0 && (
+        <div className="rounded-2xl border border-terracotta bg-card p-5">
+          <h2 className="mb-3 flex items-center gap-2 text-[17px] text-ink">
+            <span className="inline-block h-0.5 w-5 bg-terracotta" />À restituer
+          </h2>
+          <div className="flex flex-col gap-2">
+            {aRestituer.map((e) => (
+              <div key={e.id} className="flex items-center justify-between gap-4 text-sm">
+                <span>
+                  {e.titre} — {e.niveauNom}
+                </span>
+                <Link
+                  href="/evaluations"
+                  className="rounded-lg border border-sauge px-3 py-1.5 text-xs font-semibold text-sauge hover:bg-sauge hover:text-white"
+                >
+                  Ouvrir
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {niveaux.length === 0 ? (
         <p className="text-sm text-ink-soft">
-          Aucune classe créée pour l&apos;instant — direction l&apos;onglet
-          « Mes classes ».
+          Aucun niveau créé pour l&apos;instant — direction l&apos;onglet « Mes progressions ».
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {summaries.map((summary, index) => (
             <div
-              key={summary.classe.id}
+              key={summary.niveau.id}
               className="arch-top flex flex-col rounded-2xl border border-line bg-card p-5 shadow-[var(--shadow-riwaq)]"
               style={{ ["--arch-color" as string]: ARCH_COLORS[index % ARCH_COLORS.length] }}
             >
-              <h3 className="text-lg font-semibold text-ink">{summary.classe.nom}</h3>
-              <div className="mb-3.5 text-[13px] text-ink-soft">
-                {summary.chapitreEnCoursTitre
-                  ? `Chapitre en cours — ${summary.chapitreEnCoursTitre}`
-                  : summary.niveauNom
-                    ? "Aucune progression définie pour ce niveau"
-                    : "Aucun niveau lié à cette classe"}
+              <h3 className="text-lg font-semibold text-ink">{summary.niveau.nom}</h3>
+              <div className="mb-3.5 text-[12.5px] text-ink-soft">
+                {summary.prochainChapitre
+                  ? `À venir — ${summary.prochainChapitre}`
+                  : summary.chapitresTotal > 0
+                    ? "Progression terminée"
+                    : "Aucun chapitre pour l'instant"}
               </div>
-              {summary.progressionPct !== null && (
-                <div className="mb-2 h-[7px] overflow-hidden rounded-full bg-line/60">
-                  <div
-                    className="h-full rounded-full bg-terracotta"
-                    style={{ width: `${summary.progressionPct}%` }}
-                  />
-                </div>
-              )}
+              <div className="mb-2 h-[7px] overflow-hidden rounded-full bg-line/60">
+                <div
+                  className="h-full rounded-full bg-[var(--arch-color)]"
+                  style={{ width: `${summary.progressionPct}%` }}
+                />
+              </div>
               <div className="flex justify-between text-xs text-ink-soft">
-                {summary.progressionPct !== null && (
-                  <span>{summary.progressionPct}% de la séquence</span>
-                )}
                 <span>
-                  {summary.effectif} élève{summary.effectif !== 1 ? "s" : ""}
+                  {summary.chapitresTraites}/{summary.chapitresTotal} chapitres
                 </span>
+                <span>{summary.progressionPct}%</span>
               </div>
-              {summary.elevesSansNote > 0 && (
-                <span className="mt-3.5 inline-block w-fit rounded-lg bg-terracotta/15 px-2.5 py-1.5 text-xs text-terracotta-deep">
-                  {summary.elevesSansNote} élève{summary.elevesSansNote !== 1 ? "s" : ""} sans
-                  note
-                </span>
-              )}
             </div>
           ))}
         </div>
       )}
 
-      <div className="flex flex-wrap gap-4">
-        <div className="min-w-[160px] flex-1 rounded-2xl border border-line bg-card p-4">
-          <div className="font-display text-[26px] font-semibold text-terracotta-deep">
-            {classes.length}
+      <div>
+        <h2 className="mb-4 flex items-center gap-2 text-[17px] text-ink">
+          <span className="inline-block h-0.5 w-5 bg-terracotta" />
+          Derniers supports créés
+        </h2>
+        {derniersSupports.length === 0 ? (
+          <p className="text-sm text-ink-soft">
+            Aucun support pour l&apos;instant — le générateur vous attend.
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {derniersSupports.map((r) => (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setOpenRessourceId(r.id)}
+                className="rounded-2xl border border-line bg-card p-4 text-left shadow-[var(--shadow-riwaq)] transition-colors hover:border-terracotta"
+              >
+                <span className="mb-1.5 block text-[10.5px] font-bold uppercase tracking-wide text-terracotta-deep">
+                  {r.niveauNom} · {LABEL_RESSOURCE[r.type]}
+                </span>
+                <h3 className="mb-1.5 text-[15px] font-semibold leading-snug text-ink">
+                  {r.chapitreTitre}
+                </h3>
+                <p className="text-xs text-ink-soft">
+                  {new Date(r.createdAtISO).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </p>
+              </button>
+            ))}
           </div>
-          <div className="mt-0.5 text-[12.5px] text-ink-soft">classes actives</div>
-        </div>
-        <div className="min-w-[160px] flex-1 rounded-2xl border border-line bg-card p-4">
-          <div className="font-display text-[26px] font-semibold text-terracotta-deep">
-            {fichesGenereesCetteSemaine}
-          </div>
-          <div className="mt-0.5 text-[12.5px] text-ink-soft">
-            fiches générées cette semaine
-          </div>
-        </div>
-        <div className="min-w-[160px] flex-1 rounded-2xl border border-line bg-card p-4">
-          <div className="font-display text-[26px] font-semibold text-terracotta-deep">
-            {tauxMoyen !== null ? `${Math.round(tauxMoyen)}%` : "—"}
-          </div>
-          <div className="mt-0.5 text-[12.5px] text-ink-soft">
-            compétences acquises, moyenne
-          </div>
-        </div>
+        )}
       </div>
 
-      {derniereNote && derniereEvaluation && derniereClasse && (
-        <div>
-          <h2 className="mb-4 flex items-center gap-2 text-[17px] text-ink">
-            <span className="inline-block h-0.5 w-5 bg-terracotta" />
-            Reprendre où vous en étiez
-          </h2>
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-line bg-card px-5 py-4">
-            <div>
-              <div className="text-sm font-semibold text-ink">
-                {derniereEvaluation.titre} — {derniereClasse.nom}
-              </div>
-              <div className="mt-1 inline-block rounded-lg bg-[#E4EDE2] px-2.5 py-1 text-[11.5px] text-sauge">
-                Dernière note enregistrée
-              </div>
-            </div>
-            <Link
-              href="/classes"
-              className="rounded-lg border border-sauge px-4 py-2.5 text-[13.5px] font-semibold text-sauge transition-colors hover:bg-sauge hover:text-white"
-            >
-              Ouvrir
-            </Link>
-          </div>
-        </div>
-      )}
+      <ResourceModal ressourceId={openRessourceId} onClose={() => setOpenRessourceId(null)} />
     </div>
   );
 }

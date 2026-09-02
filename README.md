@@ -1,10 +1,11 @@
-# Riwaq — EduTeach AI (Prototype)
+# Riwaq — L'espace du professeur (Prototype)
 
-Prototype Next.js 15 pour enseignants du second degré : correction automatique
-de copies de mathématiques manuscrites par IA vision (Mistral AI,
-`@mistralai/mistralai`, serveur EU), progression pédagogique, contenus générés,
-suivi de classe et compétences. « Riwaq » est un nom provisoire — la galerie à
-arcades qui distribue les pièces d'une maison marocaine.
+Prototype Next.js 15 pour un professeur de mathématiques du second degré :
+progression annuelle par niveau, génération de supports pédagogiques par IA
+(synthèses, fiches d'exercices, évaluations, séries de « Rapidos »), suivi des
+notes et corrigés auto-correctifs, et banque de ressources. « Riwaq » est un
+nom provisoire — la galerie à arcades qui distribue les pièces d'une maison
+marocaine.
 
 ## Installation
 
@@ -28,7 +29,7 @@ npm run dev
 Puis ouvrez [http://localhost:3000](http://localhost:3000).
 
 L'application démarre et affiche l'interface sans clé API ; la clé n'est
-nécessaire qu'au moment de cliquer sur **« Lancer la pré-correction IA »**.
+nécessaire qu'au moment de générer un support avec l'IA.
 
 ## Vérification
 
@@ -41,56 +42,49 @@ npm run build
 
 L'application a cinq sections dans la barre latérale :
 
-- **Tableau de bord** (`/`) — `components/dashboard.tsx` : une carte par classe
-  active (chapitre en cours, % de progression, élèves sans note), compteurs
-  globaux (classes actives, fiches générées cette semaine, taux moyen de
-  compétences acquises) et un raccourci « reprendre où vous en étiez » vers la
-  dernière note enregistrée. Calcul déterministe, pas d'IA (`lib/dashboard.ts`).
-- **Mes classes** (`/classes`) — `components/classes-hub.tsx` : création des
-  classes et de leurs élèves (`classes-manager.tsx`), puis, une classe
-  sélectionnée, trois sous-onglets — *Élèves & notes* (tableau de notes par
-  évaluation, notes issues de la correction IA ou saisies manuellement, édition
-  inline, `notes-table.tsx`), *Compétences* (grille classe × compétence, échelle
-  NA/PA/A/D par élève et par évaluation, `competences-grid.tsx`,
-  `lib/competences.ts`) et *Vie de classe* (synthèse par élève — moyenne /20,
-  tendance, point d'alerte, calculée depuis les notes déjà saisies via
-  `lib/eleve-synthese.ts` — et bilan structuré de conseil de classe : points
-  positifs / vigilance / décisions, `conseil-classe.tsx`).
-- **Générateur de supports** (`/generateur`) — `components/progression-manager.tsx` :
-  progression annuelle par niveau (chapitres datés), génération IA de questions
-  flash par chapitre (`app/actions/generate-flash-questions.ts`, texte seul),
-  génération automatique d'un test de réactivation tous les 10 chapitres qui
-  pioche dans les questions flash des chapitres déjà couverts, et pour chaque
-  chapitre : génération IA d'un support de cours structuré en blocs typés
-  (définition/propriété/théorème/exemple/remarque, affichés encadrés), d'une
-  fiche d'exercices progressive à 4 niveaux (cohérente avec le support de cours),
-  et d'une évaluation + corrigé détaillé (alignée sur la fiche d'exercices) — voir
-  `app/actions/generate-course-summary.ts`, `generate-exercise-sheet.ts` et
-  `generate-evaluation.ts`. Toujours par chapitre : planning de révision espacée
-  J+1/J+3/J+7 (`lib/revision-plan.ts`), qui pioche sans nouvel appel IA dans les
-  questions flash et les exercices "application" déjà générés pour ce chapitre,
-  réparti sans chevauchement entre les 3 échéances — chacune exportable en texte
-  prêt à coller dans le cahier de textes (pas d'intégration ENT, voir Lot 6).
-- **Évaluations & correction IA** (`/evaluations`) — `components/correction-workspace.tsx` :
-  le prof choisit une classe, une évaluation (existante ou créée à la volée) et
-  un élève, saisit le barème et dépose une photo de copie. L'image est
-  redimensionnée côté client (≤1568px, JPEG) avant envoi. La Server Action
-  `app/actions/correct-copy.ts` appelle Mistral (`mistral-medium-latest`, région
-  **EU** — `api.eu.mistral.ai`) avec sortie structurée contrainte par le schéma
-  Zod de `types/evaluation.ts`. Le résultat s'affiche entièrement éditable
-  (points par question, commentaire) ; l'élève détecté par l'IA est rapproché
-  automatiquement de la liste de la classe. « Enregistrer la note » persiste le
-  résultat et enchaîne sur la copie suivante.
+- **Accueil** (`/`) — `components/dashboard.tsx` : une carte par niveau
+  (chapitre à venir, % de progression), un rappel des évaluations dont le
+  corrigé est prêt mais pas encore restitué aux élèves (« À restituer »), les
+  derniers supports générés, et un accès rapide à la sauvegarde manuelle.
+  Calcul déterministe, pas d'IA (`lib/dashboard.ts`).
+- **Mes progressions** (`/progressions`) — `components/progressions-manager.tsx` :
+  une progression par niveau (créé/supprimé à la volée). Import d'un fichier
+  `.docx` (via `mammoth`), `.md`, `.txt` ou `.csv`, ou saisie/collage direct
+  dans une zone de texte (« Chapitre — période »). Chaque chapitre est ensuite
+  éditable en ligne (titre, période, case « traité »), réordonnable par
+  flèches ou par glisser-déposer (appui long sur la poignée, tactile et
+  souris), et supprimable. Export de la progression en texte.
+- **Générateur de supports** (`/generateur`) — `components/generateur-cards.tsx` :
+  pour un niveau et un chapitre de la progression, génération IA d'une
+  **synthèse de cours**, d'une **fiche d'exercices progressive** (corrigé
+  inclus) ou d'une **évaluation** notée sur 20 avec barème par compétences
+  (`app/actions/generate-content.ts`). Quatrième carte : une **série de
+  Rapidos** — rituel de 5 questions courtes en début de séance, puisant dans
+  les chapitres déjà cochés « traité » et/ou dans les rappels d'années
+  antérieures, avec un test de 10 questions en fin de série
+  (`app/actions/generate-rapidos.ts`). Les notions signalées comme ratées
+  dans les évaluations (voir ci-dessous) sont réinjectées en priorité dans la
+  série suivante. Chaque génération est enregistrée dans la banque.
+- **Évaluations & correction** (`/evaluations`) — `components/evaluations-manager.tsx` :
+  suivi manuel des notes par évaluation (niveau, titre, date, sujet ou barème
+  facultatif, notes élèves collées en `Nom;Note`), génération d'un **corrigé
+  détaillé** pensé pour l'auto-correction des élèves le lendemain — réponse
+  rédigée, explication du raisonnement et de l'erreur fréquente à cet endroit
+  (`app/actions/generate-corrige.ts`) — et suivi de sa **restitution** (J+1).
+  Un champ libre permet de noter les notions ratées par la classe, réutilisées
+  par le générateur de Rapidos.
 - **Banque de ressources** (`/banque`) — `components/banque-ressources.tsx` :
-  tout le contenu pédagogique déjà généré (supports de cours, fiches
-  d'exercices, évaluations), filtrable par niveau, plus les fiches pratiques
-  rédigées par vous (texte libre, classées par thème, pas de génération IA,
-  `fiches-manager.tsx`) — fiches Gestion de classe et fiches méthodologiques
-  "apprendre à apprendre" (`type: "methodologie"`).
+  tout ce qui a été généré (synthèses, fiches, évaluations, séries de
+  Rapidos, corrigés), filtrable par niveau, avec aperçu, copie du texte,
+  téléchargement au format Word et suppression (`components/resource-modal.tsx`).
 
-Les appels IA texte (questions flash, contenu pédagogique) partagent
-`lib/mistral-client.ts` (client Mistral EU + Structured Outputs + mapping
-d'erreurs), également utilisé par la correction de copie.
+Les appels IA texte libre (synthèse, fiche, évaluation, Rapidos, corrigé)
+passent par `lib/mistral-client.ts` (`callMistralText`, client Mistral EU —
+`api.eu.mistral.ai` — et mapping d'erreurs partagé, voir
+`lib/mistral-errors.ts`).
 
-Persistance : `localStorage` (prototype mono-appareil/mono-navigateur, voir
-`CAHIER_DES_CHARGES.md` §5 — pas de vraie base de données pour l'instant).
+Persistance : `localStorage` (prototype mono-appareil/mono-navigateur,
+`lib/store.ts`). Une sauvegarde manuelle (export/import JSON complet,
+`components/backup-controls.tsx`, accessible depuis la barre latérale et
+l'accueil) protège contre un vidage du cache navigateur ou un changement
+d'appareil.

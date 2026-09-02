@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { BackupControls } from "@/components/backup-controls";
 
 const LINKS = [
-  { href: "/", label: "Tableau de bord" },
-  { href: "/classes", label: "Mes classes" },
+  { href: "/", label: "Accueil" },
+  { href: "/progressions", label: "Mes progressions" },
   { href: "/generateur", label: "Générateur de supports" },
-  { href: "/evaluations", label: "Évaluations & correction IA" },
+  { href: "/evaluations", label: "Évaluations & correction" },
   { href: "/banque", label: "Banque de ressources" },
 ];
 
@@ -53,9 +54,12 @@ export function SidebarNav() {
         );
       })}
 
-      <div className="mt-auto p-3.5 text-xs leading-relaxed opacity-70">
-        Riwaq — nom provisoire, « riwaq » désigne la galerie à arcades qui
-        distribue les pièces d&apos;une maison marocaine.
+      <div className="mt-auto flex flex-col gap-3 p-3.5">
+        <BackupControls variant="sidebar" />
+        <div className="text-xs leading-relaxed opacity-70">
+          Riwaq — nom provisoire, « riwaq » désigne la galerie à arcades qui
+          distribue les pièces d&apos;une maison marocaine.
+        </div>
       </div>
     </nav>
   );
