@@ -4,8 +4,15 @@ import { z, type ZodType } from "zod";
 import { describeFinishReasonError, describeMistralError } from "@/lib/mistral-errors";
 
 // Ordre choisi selon les limites du plan gratuit (admin.mistral.ai/plateforme/limits) :
-// medium n'y a que 20k tokens/min, large 250k, les ministral bien plus. Bascule sur 429.
-const MODELS = ["mistral-large-2512", "ministral-14b-2512", "ministral-8b-2512"] as const;
+// medium n'y a que 20k tokens/min, large 250k, les ministral bien plus.
+// Bascule sur 429 (limite) et 401/403 (modèle non autorisé pour ce compte).
+const MODELS = [
+  "mistral-large-2512",
+  "ministral-14b-2512",
+  "ministral-8b-2512",
+  "mistral-medium-latest",
+] as const;
+const FALLBACK_STATUSES = new Set([401, 403, 429]);
 
 type ChatRequest = Omit<Parameters<Mistral["chat"]["complete"]>[0], "model">;
 
@@ -15,7 +22,9 @@ async function completeWithFallback(client: Mistral, request: ChatRequest) {
     try {
       return await client.chat.complete({ ...request, model });
     } catch (error) {
-      if (!(error instanceof errors.MistralError) || error.statusCode !== 429) throw error;
+      if (!(error instanceof errors.MistralError) || !FALLBACK_STATUSES.has(error.statusCode)) {
+        throw error;
+      }
       lastError = error;
     }
   }
