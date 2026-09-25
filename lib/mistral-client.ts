@@ -3,8 +3,9 @@ import * as errors from "@mistralai/mistralai/models/errors";
 import { z, type ZodType } from "zod";
 import { describeFinishReasonError, describeMistralError } from "@/lib/mistral-errors";
 
-// Le plan gratuit Mistral renvoie souvent 429 (capacité saturée) sur medium : on bascule sur small.
-const MODELS = ["mistral-medium-latest", "mistral-small-latest"] as const;
+// Ordre choisi selon les limites du plan gratuit (admin.mistral.ai/plateforme/limits) :
+// medium n'y a que 20k tokens/min, large 250k, les ministral bien plus. Bascule sur 429.
+const MODELS = ["mistral-large-2512", "ministral-14b-2512", "ministral-8b-2512"] as const;
 
 type ChatRequest = Omit<Parameters<Mistral["chat"]["complete"]>[0], "model">;
 
