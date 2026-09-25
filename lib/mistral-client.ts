@@ -1,6 +1,25 @@
 import { Mistral } from "@mistralai/mistralai";
+import * as errors from "@mistralai/mistralai/models/errors";
 import { z, type ZodType } from "zod";
 import { describeFinishReasonError, describeMistralError } from "@/lib/mistral-errors";
+
+// Le plan gratuit Mistral renvoie souvent 429 (capacité saturée) sur medium : on bascule sur small.
+const MODELS = ["mistral-medium-latest", "mistral-small-latest"] as const;
+
+type ChatRequest = Omit<Parameters<Mistral["chat"]["complete"]>[0], "model">;
+
+async function completeWithFallback(client: Mistral, request: ChatRequest) {
+  let lastError: unknown;
+  for (const model of MODELS) {
+    try {
+      return await client.chat.complete({ ...request, model });
+    } catch (error) {
+      if (!(error instanceof errors.MistralError) || error.statusCode !== 429) throw error;
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
 
 export type MistralCallResult<T> =
   | { ok: true; data: T }
@@ -43,8 +62,7 @@ export async function callMistralStructured<T>({
   const jsonSchema = z.toJSONSchema(schema);
 
   try {
-    const response = await client.chat.complete({
-      model: "mistral-medium-latest",
+    const response = await completeWithFallback(client, {
       maxTokens,
       responseFormat: {
         type: "json_schema",
@@ -110,8 +128,7 @@ export async function callMistralText({
   const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY, server: "eu" });
 
   try {
-    const response = await client.chat.complete({
-      model: "mistral-medium-latest",
+    const response = await completeWithFallback(client, {
       maxTokens,
       messages: [
         { role: "system", content: systemPrompt },
