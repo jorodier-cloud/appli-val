@@ -3,7 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import type { Niveau, ProgressionItem } from "@/types/pedagogie";
 import type { Ressource, TypeRessource } from "@/types/contenu";
-import type { EvaluationSuivi, NoteEleve } from "@/types/evaluation";
+import type { EvaluationSuivi, NoteEleve, QuestionScore } from "@/types/evaluation";
 
 interface StoreState {
   niveaux: Niveau[];
@@ -259,6 +259,32 @@ export function marquerEvaluationRestituee(evaluationId: string) {
 
 export function removeEvaluation(evaluationId: string) {
   setState({ ...state, evaluations: state.evaluations.filter((e) => e.id !== evaluationId) });
+}
+
+/**
+ * Enregistre le résultat d'une copie corrigée pour un élève de l'évaluation :
+ * rapproche par nom (insensible à la casse) avec un élève déjà présent dans la
+ * liste, sinon l'ajoute.
+ */
+export function upsertCorrection(
+  evaluationId: string,
+  nom: string,
+  patch: { note: number | null; breakdown: QuestionScore[]; appreciation: string }
+) {
+  setState({
+    ...state,
+    evaluations: state.evaluations.map((e) => {
+      if (e.id !== evaluationId) return e;
+      const index = e.eleves.findIndex(
+        (s) => s.nom.trim().toLowerCase() === nom.trim().toLowerCase()
+      );
+      const entry: NoteEleve = { nom: nom.trim(), ...patch };
+      const eleves = [...e.eleves];
+      if (index >= 0) eleves[index] = entry;
+      else eleves.push(entry);
+      return { ...e, eleves };
+    }),
+  });
 }
 
 // --- Sauvegarde manuelle -----------------------------------------------------

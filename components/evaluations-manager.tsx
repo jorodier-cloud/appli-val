@@ -16,6 +16,7 @@ import {
 } from "@/lib/store";
 import { generateCorrige } from "@/app/actions/generate-corrige";
 import { ResourceModal } from "@/components/resource-modal";
+import { CorrectionCopie } from "@/components/correction-copie";
 import type { NoteEleve } from "@/types/evaluation";
 
 function parseStudents(text: string): NoteEleve[] {
@@ -193,8 +194,6 @@ function EvaluationCard({
   if (!evaluation) return null;
 
   const niveauNom = niveaux.find((n) => n.id === evaluation.niveauId)?.nom ?? "?";
-  const notes = evaluation.eleves.map((s) => s.note).filter((n): n is number => n !== null);
-  const moyenne = notes.length ? (notes.reduce((a, b) => a + b, 0) / notes.length).toFixed(1) : "—";
 
   const handleGenerateCorrige = () => {
     setError(null);
@@ -246,16 +245,7 @@ function EvaluationCard({
         </span>
       </div>
 
-      <div className="mb-3 flex gap-5">
-        <div>
-          <b className="block font-display text-[19px] text-terracotta-deep">{moyenne}</b>
-          <span className="text-[11px] text-ink-soft">moyenne /20</span>
-        </div>
-        <div>
-          <b className="block font-display text-[19px] text-terracotta-deep">{evaluation.eleves.length}</b>
-          <span className="text-[11px] text-ink-soft">élèves</span>
-        </div>
-      </div>
+      <CorrectionCopie evaluation={evaluation} niveauNom={niveauNom} />
 
       <textarea
         rows={2}
