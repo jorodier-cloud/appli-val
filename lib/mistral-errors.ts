@@ -25,6 +25,38 @@ function extractApiMessage(body: string): string | null {
   }
 }
 
+/** Journalise le refus API côté serveur (jamais la requête ni les prompts) pour le diagnostic. */
+function logMistralError(error: errors.MistralError): void {
+  let details: Record<string, unknown> = {};
+  try {
+    const parsed: unknown = JSON.parse(error.body);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      details = parsed as Record<string, unknown>;
+    }
+  } catch {
+    // Corps non JSON : rien de plus à journaliser.
+  }
+  const safeDetail = (value: unknown) => {
+    if (typeof value !== "string" && typeof value !== "number") return undefined;
+    const text = String(value);
+    const key = process.env.MISTRAL_API_KEY;
+    return (key ? text.split(key).join("[masqué]") : text).slice(0, 500);
+  };
+  const rateLimits: Record<string, string> = {};
+  error.headers.forEach((value, name) => {
+    if (/^(?:x-ratelimit-[a-z-]+|retry-after)$/.test(name) && /^[\d\s.,;=:/+-]+$/.test(value)) {
+      rateLimits[name] = value.slice(0, 150);
+    }
+  });
+  console.error("[Mistral API]", JSON.stringify({
+    status: error.statusCode,
+    code: safeDetail(details.code),
+    type: safeDetail(details.type),
+    message: safeDetail(details.message),
+    rateLimits,
+  }));
+}
+
 /** Traduit une exception levée par le SDK Mistral en message explicite pour le prof. */
 export function describeMistralError(error: unknown): string {
   if (
@@ -36,6 +68,7 @@ export function describeMistralError(error: unknown): string {
   }
 
   if (error instanceof errors.MistralError) {
+    logMistralError(error);
     const detail = extractApiMessage(error.body);
     const suffix = detail ? ` (${detail})` : "";
     if (error.statusCode === 401) {
