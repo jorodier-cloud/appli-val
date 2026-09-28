@@ -1,6 +1,35 @@
 import { Mistral } from "@mistralai/mistralai";
+import * as errors from "@mistralai/mistralai/models/errors";
 import { z, type ZodType } from "zod";
 import { describeFinishReasonError, describeMistralError } from "@/lib/mistral-errors";
+
+// Ordre choisi selon les limites du plan gratuit (admin.mistral.ai/plateforme/limits) :
+// medium n'y a que 20k tokens/min, large 250k, les ministral bien plus.
+// Bascule sur 429 (limite) et 401/403 (modèle non autorisé pour ce compte).
+const MODELS = [
+  "mistral-large-2512",
+  "ministral-14b-2512",
+  "ministral-8b-2512",
+  "mistral-medium-latest",
+] as const;
+const FALLBACK_STATUSES = new Set([401, 403, 429]);
+
+type ChatRequest = Omit<Parameters<Mistral["chat"]["complete"]>[0], "model">;
+
+async function completeWithFallback(client: Mistral, request: ChatRequest) {
+  let lastError: unknown;
+  for (const model of MODELS) {
+    try {
+      return await client.chat.complete({ ...request, model });
+    } catch (error) {
+      if (!(error instanceof errors.MistralError) || !FALLBACK_STATUSES.has(error.statusCode)) {
+        throw error;
+      }
+      lastError = error;
+    }
+  }
+  throw lastError;
+}
 
 export type MistralCallResult<T> =
   | { ok: true; data: T }
@@ -43,8 +72,7 @@ export async function callMistralStructured<T>({
   const jsonSchema = z.toJSONSchema(schema);
 
   try {
-    const response = await client.chat.complete({
-      model: "mistral-medium-latest",
+    const response = await completeWithFallback(client, {
       maxTokens,
       responseFormat: {
         type: "json_schema",
@@ -110,8 +138,7 @@ export async function callMistralText({
   const client = new Mistral({ apiKey: process.env.MISTRAL_API_KEY, server: "eu" });
 
   try {
-    const response = await client.chat.complete({
-      model: "mistral-medium-latest",
+    const response = await completeWithFallback(client, {
       maxTokens,
       messages: [
         { role: "system", content: systemPrompt },

@@ -16,6 +16,15 @@ export function describeFinishReasonError(
   return null;
 }
 
+function extractApiMessage(body: string): string | null {
+  try {
+    const message = JSON.parse(body)?.message;
+    return typeof message === "string" ? message : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Traduit une exception levée par le SDK Mistral en message explicite pour le prof. */
 export function describeMistralError(error: unknown): string {
   if (
@@ -27,11 +36,16 @@ export function describeMistralError(error: unknown): string {
   }
 
   if (error instanceof errors.MistralError) {
-    if (error.statusCode === 401 || error.statusCode === 403) {
-      return "Clé API Mistral invalide ou non autorisée.";
+    const detail = extractApiMessage(error.body);
+    const suffix = detail ? ` (${detail})` : "";
+    if (error.statusCode === 401) {
+      return `Clé API Mistral invalide${suffix}.`;
+    }
+    if (error.statusCode === 403) {
+      return `Accès refusé par Mistral${suffix}.`;
     }
     if (error.statusCode === 429) {
-      return "Limite de requêtes atteinte. Réessayez dans quelques instants.";
+      return `Limite Mistral atteinte${suffix}. Réessayez dans quelques instants.`;
     }
     return `Erreur API Mistral (${error.statusCode}) : ${error.message}`;
   }
