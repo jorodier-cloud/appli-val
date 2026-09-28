@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { callMistralStructured } from "@/lib/mistral-client";
+import { callMistralStructured, VISION_MODELS } from "@/lib/mistral-client";
 
 const breakdownItemSchema = z.object({
   question: z.string(),
@@ -68,6 +68,7 @@ Consignes :
     schema: gradeResultSchema,
     schemaName: "grade_copy",
     maxTokens: 3000,
+    models: VISION_MODELS,
   });
 
   if (!result.ok) return { ok: false, error: result.error };

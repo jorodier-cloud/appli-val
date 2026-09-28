@@ -12,13 +12,21 @@ const MODELS = [
   "ministral-8b-2512",
   "mistral-medium-latest",
 ] as const;
+// Seul mistral-medium-latest, parmi les modèles ci-dessus, comprend les images : les appels
+// avec une image (correction de copie) doivent forcer ce modèle plutôt que la liste texte,
+// sous peine d'un 422 immédiat sur un modèle texte-only avant même d'atteindre celui-ci.
+export const VISION_MODELS = ["mistral-medium-latest"] as const;
 const FALLBACK_STATUSES = new Set([401, 403, 429]);
 
 type ChatRequest = Omit<Parameters<Mistral["chat"]["complete"]>[0], "model">;
 
-async function completeWithFallback(client: Mistral, request: ChatRequest) {
+async function completeWithFallback(
+  client: Mistral,
+  request: ChatRequest,
+  models: readonly string[] = MODELS
+) {
   let lastError: unknown;
-  for (const model of MODELS) {
+  for (const model of models) {
     try {
       return await client.chat.complete({ ...request, model });
     } catch (error) {
@@ -45,6 +53,7 @@ interface MistralStructuredCallInput<T> {
   schema: ZodType<T>;
   schemaName: string;
   maxTokens?: number;
+  models?: readonly string[];
 }
 
 /**
@@ -59,6 +68,7 @@ export async function callMistralStructured<T>({
   schema,
   schemaName,
   maxTokens = 4000,
+  models,
 }: MistralStructuredCallInput<T>): Promise<MistralCallResult<T>> {
   if (!process.env.MISTRAL_API_KEY) {
     return {
@@ -72,17 +82,21 @@ export async function callMistralStructured<T>({
   const jsonSchema = z.toJSONSchema(schema);
 
   try {
-    const response = await completeWithFallback(client, {
-      maxTokens,
-      responseFormat: {
-        type: "json_schema",
-        jsonSchema: { name: schemaName, schemaDefinition: jsonSchema, strict: true },
+    const response = await completeWithFallback(
+      client,
+      {
+        maxTokens,
+        responseFormat: {
+          type: "json_schema",
+          jsonSchema: { name: schemaName, schemaDefinition: jsonSchema, strict: true },
+        },
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userContent },
+        ],
       },
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: userContent },
-      ],
-    });
+      models
+    );
 
     const choice = response.choices?.[0];
 
