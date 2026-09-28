@@ -8,6 +8,7 @@ import { gradeStudentCopy } from "@/app/actions/grade-copy";
 import type { EvaluationSuivi, QuestionScore } from "@/types/evaluation";
 
 const MAX_SCORE = 20;
+const MAX_DIMENSION = 1600;
 
 interface Draft {
   studentName: string;
@@ -17,12 +18,38 @@ interface Draft {
   appreciation: string;
 }
 
-function fileToDataUrl(file: File): Promise<string> {
+/**
+ * Convertit la photo en JPEG via un canvas plutôt qu'un simple FileReader :
+ * certains navigateurs mobiles (capture caméra Android notamment) renvoient un
+ * type MIME vide ou incorrect, ce qui produit une data URL que l'API Mistral
+ * rejette. Le passage par canvas force un JPEG valide et réduit au passage la
+ * taille d'une photo de plusieurs Mo prise au format natif du téléphone.
+ */
+function fileToNormalizedDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(reader.error instanceof Error ? reader.error : new Error("Lecture impossible."));
-    reader.readAsDataURL(file);
+    const objectUrl = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const scale = Math.min(1, MAX_DIMENSION / Math.max(img.width, img.height));
+      const width = Math.round(img.width * scale);
+      const height = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("Impossible de préparer cette image."));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      resolve(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Impossible de lire cette image."));
+    };
+    img.src = objectUrl;
   });
 }
 
@@ -70,7 +97,7 @@ export function CorrectionCopie({
     setDraft(null);
     let dataUrl: string;
     try {
-      dataUrl = await fileToDataUrl(file);
+      dataUrl = await fileToNormalizedDataUrl(file);
     } catch {
       setError("Impossible de lire cette image.");
       return;
