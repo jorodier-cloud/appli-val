@@ -12,6 +12,15 @@
 
 ## Journal de bord
 
+### 2026-10-05 — Claude — Audit et correctifs (skills code-review, security-review, session-start-hook, webapp-testing)
+- Bug corrigé : modifier une évaluation effaçait le détail par question et l'appréciation des copies corrigées par photo (`components/evaluations-manager.tsx`, fusion par nom).
+- Bug corrigé : après une erreur IA, la correction de copie restait bloquée (plus de bouton d'upload) → bouton « Reprendre une photo » (`components/correction-copie.tsx`).
+- Note recalculée à partir du détail par question (l'IA ne garantit pas la somme), bornée à 0–20 ; points par question bornés ; CSV avec virgule décimale (Excel FR) ; clés React robustes aux homonymes.
+- Sécurité (Server Actions = endpoints publics) : `grade-copy.ts` n'accepte qu'une image `data:` ≤ 8 Mo ; `generate-rapidos.ts` borne `nb` à 20 (sinon appels Mistral illimités).
+- Hook SessionStart (`.claude/settings.json`, `.claude/hooks/session-start.sh`) : `npm install` auto en session cloud.
+- Vérifié : `npx tsc --noEmit`, `npm run build`, test Playwright (édition conserve le détail, bouton « Reprendre une photo » après erreur).
+- Prochaine étape : aucune authentification sur l'app déployée → n'importe qui connaissant l'URL peut consommer le crédit Mistral. Ajouter un code d'accès (middleware) avant diffusion.
+
 ### 2026-09-24 — Codex
 - Dossier synchronisé avec GitHub sur `master` (`66d0949`) ; modifications locales conservées.
 - Fichiers synchronisés : `app/actions/generate-content.ts`, `app/actions/generate-rapidos.ts`, `app/globals.css`, `components/generateur-cards.tsx`, `lib/markdown.ts`. Journaux `CLAUDE.md` et `AGENTS.md` actualisés.

@@ -19,6 +19,11 @@ const gradeResultSchema = z.object({
   generalFeedback: z.string(),
 });
 
+const IMAGE_DATA_URL = /^data:image\/(?:jpeg|png|webp);base64,/;
+// Le client envoie un JPEG ≤ 1600 px (quelques centaines de Ko) ; 8 Mo laisse
+// une large marge sous la limite de 10 Mo des Server Actions (next.config.ts).
+const MAX_IMAGE_DATA_URL_LENGTH = 8 * 1024 * 1024;
+
 export type GradeCopyResult = z.infer<typeof gradeResultSchema>;
 
 export interface GradeCopyInput {
@@ -41,6 +46,14 @@ export type GradeCopyResponse =
 export async function gradeStudentCopy(input: GradeCopyInput): Promise<GradeCopyResponse> {
   if (!input.imageDataUrl.trim()) {
     return { ok: false, error: "Aucune photo de copie fournie." };
+  }
+  // Server Action = point d'entrée public : on n'accepte qu'une image encodée
+  // (pas d'URL distante à faire télécharger par Mistral) et de taille bornée.
+  if (!IMAGE_DATA_URL.test(input.imageDataUrl) || input.imageDataUrl.length > MAX_IMAGE_DATA_URL_LENGTH) {
+    return { ok: false, error: "Photo de copie invalide ou trop volumineuse." };
+  }
+  if (!Number.isFinite(input.maxScore) || input.maxScore <= 0) {
+    return { ok: false, error: "Note maximale invalide." };
   }
 
   const systemPrompt = `Tu es professeur de mathématiques dans le système scolaire français, niveau ${input.niveauNom}. Tu corriges la copie manuscrite d'un élève pour l'évaluation « ${input.titre} », notée sur ${input.maxScore}.

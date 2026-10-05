@@ -11,6 +11,15 @@
 - **À la fin de chaque tâche :** mettre systématiquement à jour la section « Journal de bord » ci-dessous en indiquant la date, l'agent utilisé (Claude ou Codex), un résumé court des actions réalisées, les fichiers touchés et les étapes suivantes.
 
 ## Journal de bord
+### 2026-10-05 — Claude — Audit et correctifs (skills code-review, security-review, session-start-hook, webapp-testing)
+- Bug corrigé : modifier une évaluation effaçait le détail par question et l'appréciation des copies corrigées par photo (`components/evaluations-manager.tsx`, fusion par nom).
+- Bug corrigé : après une erreur IA, la correction de copie restait bloquée (plus de bouton d'upload) → bouton « Reprendre une photo » (`components/correction-copie.tsx`).
+- Note recalculée à partir du détail par question (l'IA ne garantit pas la somme), bornée à 0–20 ; points par question bornés ; CSV avec virgule décimale (Excel FR) ; clés React robustes aux homonymes.
+- Sécurité (Server Actions = endpoints publics) : `grade-copy.ts` n'accepte qu'une image `data:` ≤ 8 Mo ; `generate-rapidos.ts` borne `nb` à 20 (sinon appels Mistral illimités).
+- Hook SessionStart (`.claude/settings.json`, `.claude/hooks/session-start.sh`) : `npm install` auto en session cloud.
+- Vérifié : `npx tsc --noEmit`, `npm run build`, test Playwright (édition conserve le détail, bouton « Reprendre une photo » après erreur).
+- Prochaine étape : aucune authentification sur l'app déployée → n'importe qui connaissant l'URL peut consommer le crédit Mistral. Ajouter un code d'accès (middleware) avant diffusion.
+
 ### 2026-09-28 — Claude — Correction de copie par photo (vision Mistral)
 - Ajout du module manquant décrit au §3.7 du cahier des charges (photo de copie → correction IA →
   note/feedback), qui n'existait pas dans le code malgré ce que dit CAHIER_DES_CHARGES.md : intégré

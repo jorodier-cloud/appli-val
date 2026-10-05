@@ -33,6 +33,24 @@ function parseStudents(text: string): NoteEleve[] {
     .filter((s) => s.nom.length > 0);
 }
 
+/**
+ * La zone de texte ne porte que `Nom;Note` : sans cette fusion, modifier une
+ * évaluation effacerait le détail par question et l'appréciation des copies
+ * corrigées par photo. L'appréciation est conservée ; le détail seulement si
+ * la note n'a pas été retouchée à la main (sinon il ne lui correspond plus).
+ */
+function keepCorrectionDetails(parsed: NoteEleve[], previous: NoteEleve[]): NoteEleve[] {
+  return parsed.map((eleve) => {
+    const prev = previous.find((p) => p.nom.trim().toLowerCase() === eleve.nom.toLowerCase());
+    if (!prev) return eleve;
+    return {
+      ...eleve,
+      ...(prev.appreciation !== undefined && { appreciation: prev.appreciation }),
+      ...(prev.breakdown !== undefined && prev.note === eleve.note && { breakdown: prev.breakdown }),
+    };
+  });
+}
+
 function studentsToText(eleves: NoteEleve[]): string {
   return eleves.map((s) => `${s.nom};${s.note !== null ? s.note : ""}`).join("\n");
 }
@@ -63,7 +81,8 @@ function EvaluationForm({
 
   const handleSave = () => {
     if (!niveauId || !titre.trim()) return;
-    const eleves = parseStudents(notesText);
+    const parsed = parseStudents(notesText);
+    const eleves = editing ? keepCorrectionDetails(parsed, editing.eleves) : parsed;
     if (editingId) {
       updateEvaluation(editingId, { niveauId, titre, dateEvalISO: dateEval, sujet, eleves });
     } else {
