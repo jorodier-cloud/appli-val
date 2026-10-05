@@ -4,6 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { AlertCircle, Camera, ChevronDown, ChevronUp, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { upsertCorrection } from "@/lib/store";
+import { clamp } from "@/lib/utils";
 import { gradeStudentCopy } from "@/app/actions/grade-copy";
 import type { EvaluationSuivi, QuestionScore } from "@/types/evaluation";
 
@@ -53,6 +54,15 @@ function fileToNormalizedDataUrl(file: File): Promise<string> {
   });
 }
 
+/** Somme des points par question, bornée à la note maximale de l'évaluation. */
+function sumBreakdown(breakdown: QuestionScore[]): number {
+  return clamp(
+    breakdown.reduce((total, b) => total + b.pointsAwarded, 0),
+    0,
+    MAX_SCORE
+  );
+}
+
 function csvCell(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;
 }
@@ -60,7 +70,7 @@ function csvCell(value: string): string {
 function downloadCsv(evaluation: EvaluationSuivi) {
   const rows = [
     ["Nom", "Note", "Appréciation"],
-    ...evaluation.eleves.map((e) => [e.nom, e.note !== null ? String(e.note) : "", e.appreciation ?? ""]),
+    ...evaluation.eleves.map((e) => [e.nom, e.note !== null ? String(e.note).replace(".", ",") : "", e.appreciation ?? ""]),
   ];
   const csv = rows.map((row) => row.map(csvCell).join(";")).join("\n");
   const blob = new Blob([`﻿${csv}`], { type: "text/csv;charset=utf-8" });
@@ -69,7 +79,9 @@ function downloadCsv(evaluation: EvaluationSuivi) {
   a.href = url;
   a.download = `${evaluation.titre || "notes"}.csv`;
   a.click();
-  URL.revokeObjectURL(url);
+  // Révocation différée : certains navigateurs (Firefox, Safari) annulent le
+  // téléchargement si l'URL est révoquée dans le même tick que le clic.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export function CorrectionCopie({
@@ -116,9 +128,12 @@ export function CorrectionCopie({
         setError(result.error);
         return;
       }
+      // L'IA ne garantit pas totalScore = somme du détail : on recalcule.
       setDraft({
         studentName: result.data.studentName,
-        totalScore: result.data.totalScore,
+        totalScore: result.data.breakdown.length
+          ? sumBreakdown(result.data.breakdown)
+          : clamp(result.data.totalScore, 0, MAX_SCORE),
         isReadable: result.data.isReadable,
         breakdown: result.data.breakdown,
         appreciation: result.data.generalFeedback,
@@ -147,7 +162,7 @@ export function CorrectionCopie({
   const updateBreakdownItem = (index: number, patch: Partial<QuestionScore>) => {
     if (!draft) return;
     const breakdown = draft.breakdown.map((b, i) => (i === index ? { ...b, ...patch } : b));
-    setDraft({ ...draft, breakdown });
+    setDraft({ ...draft, breakdown, totalScore: sumBreakdown(breakdown) });
   };
 
   return (
@@ -173,10 +188,10 @@ export function CorrectionCopie({
 
       {evaluation.eleves.length > 0 && (
         <div className="overflow-hidden rounded-lg border border-line">
-          {evaluation.eleves.map((eleve) => {
+          {evaluation.eleves.map((eleve, index) => {
             const expanded = expandedNom === eleve.nom;
             return (
-              <div key={eleve.nom} className="border-b border-line last:border-b-0">
+              <div key={`${index}-${eleve.nom}`} className="border-b border-line last:border-b-0">
                 <button
                   type="button"
                   onClick={() => setExpandedNom(expanded ? null : eleve.nom)}
@@ -271,10 +286,17 @@ export function CorrectionCopie({
           )}
 
           {error && (
-            <p className="flex items-center gap-1.5 text-xs text-terracotta-deep">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-              {error}
-            </p>
+            <div className="flex flex-col items-start gap-2">
+              <p className="flex items-center gap-1.5 text-xs text-terracotta-deep">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                {error}
+              </p>
+              {photoDataUrl && !draft && (
+                <Button variant="ghost" onClick={resetForm}>
+                  Reprendre une photo
+                </Button>
+              )}
+            </div>
           )}
 
           {draft && (
@@ -309,7 +331,9 @@ export function CorrectionCopie({
                     min={0}
                     max={MAX_SCORE}
                     value={draft.totalScore}
-                    onChange={(e) => setDraft({ ...draft, totalScore: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setDraft({ ...draft, totalScore: clamp(parseFloat(e.target.value) || 0, 0, MAX_SCORE) })
+                    }
                     className="w-full rounded-lg border border-line bg-white p-2.5 text-sm text-ink focus:border-terracotta-deep focus:outline-none focus:ring-1 focus:ring-terracotta-deep"
                   />
                 </div>
@@ -329,7 +353,9 @@ export function CorrectionCopie({
                         min={0}
                         value={b.pointsAwarded}
                         onChange={(e) =>
-                          updateBreakdownItem(i, { pointsAwarded: parseFloat(e.target.value) || 0 })
+                          updateBreakdownItem(i, {
+                            pointsAwarded: clamp(parseFloat(e.target.value) || 0, 0, b.pointsPossible),
+                          })
                         }
                         className="w-16 rounded-md border border-line p-1.5 text-sm"
                       />

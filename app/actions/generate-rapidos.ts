@@ -4,6 +4,8 @@ import { callMistralText } from "@/lib/mistral-client";
 
 export type SourceRapidos = "mix" | "annee" | "anterieur";
 
+const MAX_RAPIDOS = 20;
+
 export interface GenerateRapidosInput {
   niveauNom: string;
   chapitresTraites: string[];
@@ -93,6 +95,11 @@ export async function generateRapidosSerie(
 ): Promise<GenerateRapidosResponse> {
   if (!input.niveauNom) {
     return { ok: false, error: "Choisissez un niveau." };
+  }
+  // Un appel Mistral par tranche de 4 : borné pour qu'un appel direct à cette
+  // Server Action (point d'entrée public) ne puisse pas déclencher des centaines de requêtes.
+  if (!Number.isInteger(input.nb) || input.nb < 1 || input.nb > MAX_RAPIDOS) {
+    return { ok: false, error: `Le nombre de Rapidos doit être compris entre 1 et ${MAX_RAPIDOS}.` };
   }
 
   const parts: string[] = [];
