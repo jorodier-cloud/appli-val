@@ -123,7 +123,7 @@ export function Dashboard() {
                 onClick={() => setOpenRessourceId(r.id)}
                 className="rounded-2xl border border-line bg-card p-4 text-left shadow-[var(--shadow-riwaq)] transition-colors hover:border-terracotta"
               >
-                <span className="mb-1.5 block text-[10.5px] font-bold uppercase tracking-wide text-terracotta-deep">
+                <span className="mb-1.5 block text-[12px] font-semibold text-terracotta-deep">
                   {r.niveauNom} · {LABEL_RESSOURCE[r.type]}
                 </span>
                 <h3 className="mb-1.5 text-[15px] font-semibold leading-snug text-ink">

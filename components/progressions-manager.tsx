@@ -363,7 +363,7 @@ export function ProgressionsManager() {
         <div className="rounded-2xl border border-line bg-card p-5 shadow-[var(--shadow-riwaq)]">
           <div className="mb-3.5 flex flex-wrap items-end justify-between gap-3">
             <div className="min-w-[200px] flex-1">
-              <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+              <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
                 Niveau affiché
               </label>
               <select
@@ -401,7 +401,7 @@ export function ProgressionsManager() {
           />
 
           <div className="mt-4">
-            <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+            <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
               Ou collez / modifiez vos chapitres (une ligne par chapitre, « Chapitre — période » possible)
             </label>
             <textarea

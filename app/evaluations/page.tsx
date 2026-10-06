@@ -4,9 +4,9 @@ export const maxDuration = 60;
 
 export default function EvaluationsPage() {
   return (
-    <main className="flex min-h-screen max-w-[1180px] flex-col gap-6 px-[46px] py-[38px]">
+    <main className="flex min-h-screen max-w-[1180px] flex-col gap-6 px-4 pb-28 pt-6 md:px-[46px] md:py-[38px]">
       <header className="flex flex-col gap-1">
-        <h1 className="font-display text-[29px] font-semibold text-ink">
+        <h1 className="font-display text-[25px] font-semibold md:text-[29px] text-ink">
           Évaluations &amp; correction
         </h1>
         <p className="text-[14.5px] text-ink-soft">

@@ -11,6 +11,14 @@
 - **À la fin de chaque tâche :** mettre systématiquement à jour la section « Journal de bord » ci-dessous en indiquant la date, l'agent utilisé (Claude ou Codex), un résumé court des actions réalisées, les fichiers touchés et les étapes suivantes.
 
 ## Journal de bord
+### 2026-10-06 — Claude — Interface : mobile, lisibilité, répartition des notes (skills frontend-design, dataviz, webapp-testing)
+- Mobile : la barre latérale (236 px) occupait ~60 % d'un écran de téléphone → remplacée sous 768 px par une barre d'onglets fixe en bas (icônes + libellés courts, zone de sécurité iOS) ; marges de page réduites (`components/sidebar-nav.tsx`, `app/**/page.tsx`).
+- Bug visuel corrigé : l'arche des cartes (46 px) dépassait le padding (34 px) et chevauchait les titres → arche 40 × 26 px, padding 42 px (`app/globals.css`).
+- Libellés en capitales espacées → casse de phrase, plus lisibles ; focus clavier visible ; `prefers-reduced-motion` respecté.
+- Nouveau : histogramme de répartition des notes par évaluation (tranches de 2 points, couleur terracotta validée par le script dataviz, lecture au survol et aux flèches, tableau pour lecteurs d'écran) — `components/notes-histogram.tsx`, intégré dans `components/correction-copie.tsx` ; ligne de statistiques recomposée (plus de libellés coupés).
+- Vérifié : `npx tsc --noEmit`, `npm run build`, captures Playwright desktop/mobile avant/après, test clavier de l'histogramme (bornes 0 et 20 incluses), aucune erreur console.
+- Prochaine étape : code d'accès sur l'app déployée (toujours ouvert, voir entrée du 2026-10-05).
+
 ### 2026-10-05 — Claude — Audit et correctifs (skills code-review, security-review, session-start-hook, webapp-testing)
 - Bug corrigé : modifier une évaluation effaçait le détail par question et l'appréciation des copies corrigées par photo (`components/evaluations-manager.tsx`, fusion par nom).
 - Bug corrigé : après une erreur IA, la correction de copie restait bloquée (plus de bouton d'upload) → bouton « Reprendre une photo » (`components/correction-copie.tsx`).

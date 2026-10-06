@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { upsertCorrection } from "@/lib/store";
 import { clamp } from "@/lib/utils";
 import { gradeStudentCopy } from "@/app/actions/grade-copy";
+import { NotesHistogram } from "@/components/notes-histogram";
 import type { EvaluationSuivi, QuestionScore } from "@/types/evaluation";
 
 const MAX_SCORE = 20;
@@ -167,24 +168,27 @@ export function CorrectionCopie({
 
   return (
     <div className="mb-3 flex flex-col gap-3">
-      <div className="flex gap-5">
-        <div>
-          <b className="block font-display text-[19px] text-terracotta-deep">{moyenne}</b>
-          <span className="text-[11px] text-ink-soft">moyenne /20</span>
-        </div>
-        <div>
-          <b className="block font-display text-[19px] text-ink">{min}</b>
-          <span className="text-[11px] text-ink-soft">note min</span>
-        </div>
-        <div>
-          <b className="block font-display text-[19px] text-ink">{max}</b>
-          <span className="text-[11px] text-ink-soft">note max</span>
-        </div>
-        <div>
-          <b className="block font-display text-[19px] text-ink">{evaluation.eleves.length}</b>
-          <span className="text-[11px] text-ink-soft">copies</span>
-        </div>
-      </div>
+      <dl className="grid grid-cols-4 gap-2">
+        {[
+          { label: "moyenne /20", value: moyenne, accent: true },
+          { label: "note min", value: min },
+          { label: "note max", value: max },
+          { label: "copies", value: String(evaluation.eleves.length) },
+        ].map((stat) => (
+          <div key={stat.label} className="flex flex-col-reverse">
+            <dt className="whitespace-nowrap text-[11.5px] leading-tight text-ink-soft">{stat.label}</dt>
+            <dd
+              className={`font-display text-[19px] font-semibold leading-tight ${
+                stat.accent ? "text-terracotta-deep" : "text-ink"
+              }`}
+            >
+              {stat.value}
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      <NotesHistogram notes={notes} maxScore={MAX_SCORE} />
 
       {evaluation.eleves.length > 0 && (
         <div className="overflow-hidden rounded-lg border border-line">
@@ -311,7 +315,7 @@ export function CorrectionCopie({
 
               <div className="flex flex-wrap items-end gap-3">
                 <div className="min-w-[180px] flex-1">
-                  <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+                  <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
                     Élève
                   </label>
                   <input
@@ -322,7 +326,7 @@ export function CorrectionCopie({
                   />
                 </div>
                 <div className="w-[100px]">
-                  <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+                  <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
                     Note /20
                   </label>
                   <input
@@ -341,7 +345,7 @@ export function CorrectionCopie({
 
               {draft.breakdown.length > 0 && (
                 <div className="flex flex-col gap-2">
-                  <span className="text-[11.5px] uppercase tracking-wide text-ink-soft">
+                  <span className="text-[12.5px] font-medium text-ink-soft">
                     Détail par question
                   </span>
                   {draft.breakdown.map((b, i) => (
@@ -372,7 +376,7 @@ export function CorrectionCopie({
               )}
 
               <div>
-                <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+                <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
                   Appréciation
                 </label>
                 <textarea

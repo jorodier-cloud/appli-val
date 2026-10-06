@@ -26,7 +26,7 @@ export function BanqueRessources() {
     <div className="flex flex-col gap-6">
       {niveauxDisponibles.length > 0 && (
         <div className="max-w-xs">
-          <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+          <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
             Filtrer par niveau
           </label>
           <select
@@ -55,7 +55,7 @@ export function BanqueRessources() {
               onClick={() => setOpenRessourceId(r.id)}
               className="rounded-2xl border border-line bg-card p-4 text-left shadow-[var(--shadow-riwaq)] transition-colors hover:border-terracotta"
             >
-              <span className="mb-1.5 block text-[10.5px] font-bold uppercase tracking-wide text-terracotta-deep">
+              <span className="mb-1.5 block text-[12px] font-semibold text-terracotta-deep">
                 {r.niveauNom} · {LABEL_RESSOURCE[r.type]}
               </span>
               <h3 className="mb-1.5 text-[15px] font-semibold leading-snug text-ink">
