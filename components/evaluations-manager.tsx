@@ -102,7 +102,7 @@ function EvaluationForm({
       </h3>
       <div className="mb-3 flex flex-wrap items-start gap-4">
         <div className="min-w-[160px] flex-1">
-          <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">Niveau</label>
+          <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">Niveau</label>
           <select
             value={niveauId}
             onChange={(e) => setNiveauId(e.target.value)}
@@ -117,7 +117,7 @@ function EvaluationForm({
           </select>
         </div>
         <div className="min-w-[200px] flex-[2]">
-          <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+          <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
             Titre / chapitre
           </label>
           <input
@@ -129,7 +129,7 @@ function EvaluationForm({
           />
         </div>
         <div className="min-w-[150px]">
-          <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+          <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
             Date de l&apos;évaluation
           </label>
           <input
@@ -142,7 +142,7 @@ function EvaluationForm({
       </div>
 
       <div className="mb-3">
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
           Sujet ou barème (facultatif — collez-le si vous en avez un, sinon le corrigé sera généré à
           partir du titre)
         </label>
@@ -156,7 +156,7 @@ function EvaluationForm({
       </div>
 
       <div className="mb-3">
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
           Notes des élèves — une ligne par élève : Nom;Note
         </label>
         <textarea

@@ -73,6 +73,8 @@ L'application a cinq sections dans la barre latérale :
   (`app/actions/generate-corrige.ts`) — et suivi de sa **restitution** (J+1).
   Un champ libre permet de noter les notions ratées par la classe, réutilisées
   par le générateur de Rapidos.
+  Chaque évaluation affiche moyenne, min, max et un histogramme de répartition
+  des notes (`components/notes-histogram.tsx`).
 - **Banque de ressources** (`/banque`) — `components/banque-ressources.tsx` :
   tout ce qui a été généré (synthèses, fiches, évaluations, séries de
   Rapidos, corrigés), filtrable par niveau, avec aperçu, copie du texte,

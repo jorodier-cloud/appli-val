@@ -66,7 +66,7 @@ function NiveauChapitreFields({
   return (
     <>
       <div className="mb-2.5">
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">Niveau</label>
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">Niveau</label>
         <select
           value={niveauId ?? ""}
           onChange={(e) => onNiveauChange(e.target.value)}
@@ -81,7 +81,7 @@ function NiveauChapitreFields({
         </select>
       </div>
       <div className="mb-3.5">
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">Chapitre</label>
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">Chapitre</label>
         <select
           value={chapitreTitre}
           onChange={(e) => onChapitreChange(e.target.value)}
@@ -241,7 +241,7 @@ function RapidosCard({ notes, onGenerated }: { notes: string; onGenerated: (ress
       </p>
 
       <div className="mb-2.5">
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">Niveau</label>
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">Niveau</label>
         <select
           value={niveauId ?? ""}
           onChange={(e) => setNiveauId(e.target.value)}
@@ -257,7 +257,7 @@ function RapidosCard({ notes, onGenerated }: { notes: string; onGenerated: (ress
       </div>
 
       <div className="mb-2.5">
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
           Longueur de la série
         </label>
         <select
@@ -271,7 +271,7 @@ function RapidosCard({ notes, onGenerated }: { notes: string; onGenerated: (ress
       </div>
 
       <div className="mb-1.5">
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">Puiser dans</label>
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">Puiser dans</label>
         <select
           value={source}
           onChange={(e) => setSource(e.target.value as SourceRapidos)}
@@ -328,7 +328,7 @@ export function GenerateurCards() {
       </div>
 
       <div className="max-w-xl">
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
           Établissement (en-tête des synthèses)
         </label>
         <input
@@ -338,7 +338,7 @@ export function GenerateurCards() {
           placeholder="Ex. : Lycée Français Victor Hugo"
           className="mb-4 w-full rounded-lg border border-line bg-white p-2.5 text-sm text-ink focus:border-terracotta-deep focus:outline-none focus:ring-1 focus:ring-terracotta-deep"
         />
-        <label className="mb-1 block text-[11.5px] uppercase tracking-wide text-ink-soft">
+        <label className="mb-1 block text-[12.5px] font-medium text-ink-soft">
           Consignes complémentaires (facultatif)
         </label>
         <input

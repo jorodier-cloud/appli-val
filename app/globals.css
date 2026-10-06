@@ -29,9 +29,11 @@ body {
 
 /* Motif d'arche, élément signature de l'identité Riwaq : une demi-lune posée sur
    le coin supérieur de la carte, couleur pilotée par --arch-color. */
+/* L'arche (40 × 26 px) occupe le haut de la carte et le padding lui réserve sa
+   place : l'ancienne arche de 46 px dépassait le padding et chevauchait le titre. */
 .arch-top {
   position: relative;
-  padding-top: 34px;
+  padding-top: 42px;
 }
 .arch-top::before {
   content: "";
@@ -39,10 +41,28 @@ body {
   top: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 46px;
-  height: 46px;
+  width: 40px;
+  height: 26px;
   border-radius: 999px 999px 0 0;
   background: var(--arch-color, var(--color-terracotta));
+}
+
+/* Focus clavier visible partout (les champs gardent leur propre anneau). */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-terracotta-deep);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Rendu des contenus générés par l'IA (lib/markdown.ts produit du HTML brut). */
