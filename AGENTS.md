@@ -51,3 +51,8 @@
   - If the task is completed without direct requested text output, reply ONLY: "Terminé."
   - If code, diff, or specific data is requested, return ONLY that raw output without introductory or concluding prose.
   - If a command or check fails, output ONLY the exact error and root cause.
+
+
+## Journal de bord — 7 octobre 2026 : skills par projet
+
+Codex : aucun skill Domaine ajouté à ce dépôt. Plugins Claude Code sélectionnés pour ce projet : superpowers, diagram-design ; copies Domaine synchronisées du compte masquées selon le périmètre. Mémoire Claude et connecteurs conservés. Validation et sauvegarde : inventaire de la mission Codex du 07/10. Aucun code métier ni déploiement modifié. Suite : utiliser le dépôt correspondant à la tâche ; synchroniser les copies Domaine depuis `../_skills/domain` en cas d’évolution.

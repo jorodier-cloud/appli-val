@@ -79,3 +79,8 @@
 - Exécute les commandes et les modifications d'outils en silence.
 - Sortie finale : réponds uniquement par « Terminé. » ou affiche le résultat brut demandé (code, diff, lien).
 - Si une commande échoue, affiche uniquement la cause exacte et l'erreur.
+
+
+## Journal de bord — 7 octobre 2026 : skills par projet
+
+Codex : aucun skill Domaine ajouté à ce dépôt. Plugins Claude Code sélectionnés pour ce projet : superpowers, diagram-design ; copies Domaine synchronisées du compte masquées selon le périmètre. Mémoire Claude et connecteurs conservés. Validation et sauvegarde : inventaire de la mission Codex du 07/10. Aucun code métier ni déploiement modifié. Suite : utiliser le dépôt correspondant à la tâche ; synchroniser les copies Domaine depuis `../_skills/domain` en cas d’évolution.

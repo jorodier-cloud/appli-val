@@ -10,5 +10,18 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@claude-plugins-official": true,
+    "codex@openai-codex": false,
+    "diagram-design@diagram-design": true
+  },
+  "skillOverrides": {
+    "anthropic-skills:demandes-domaine-ormoy": "off",
+    "anthropic-skills:diagnostic-automatisations-google": "off",
+    "anthropic-skills:domaine-pricing-dynamic": "off",
+    "anthropic-skills:domaine-rives-ormoy-marketing": "off",
+    "anthropic-skills:domaine-rives-ormoy-reservations": "off",
+    "anthropic-skills:domaine-rives-ormoy-voyageurs": "off"
   }
 }
