@@ -1,14 +1,14 @@
-# Instructions pour les agents (Codex, Codex, ChatGPT)
+# Instructions pour les agents (Claude Code, Codex, ChatGPT)
 
 ## Style de réponse
 - Interdiction absolue de bavarder : pas de phrases de transition (« Je fais x... », « Bon... », « Poussons vers... », « Maintenant... », etc.).
 - Ultra-concis. N'afficher que les erreurs et les questions bloquantes.
 - Exécuter directement plutôt que d'annoncer ce qui va être fait.
-- Cette règle s'applique à tous les agents (Codex, Codex, ChatGPT Work).
+- Cette règle s'applique à tous les agents (Claude Code, Codex, ChatGPT Work).
 
 ## Mémoire et synchronisation
 - **Au début de chaque tâche :** lire attentivement l'ensemble de ce fichier et son historique.
-- **À la fin de chaque tâche :** mettre systématiquement à jour la section « Journal de bord » ci-dessous en indiquant la date, l'agent utilisé (Codex ou Codex), un résumé court des actions réalisées, les fichiers touchés et les étapes suivantes.
+- **À la fin de chaque tâche :** mettre systématiquement à jour la section « Journal de bord » ci-dessous en indiquant la date, l'agent utilisé (Claude ou Codex), un résumé court des actions réalisées, les fichiers touchés et les étapes suivantes.
 
 ## Journal de bord
 
