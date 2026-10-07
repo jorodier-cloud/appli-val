@@ -11,6 +11,12 @@
 - **À la fin de chaque tâche :** mettre systématiquement à jour la section « Journal de bord » ci-dessous en indiquant la date, l'agent utilisé (Claude ou Codex), un résumé court des actions réalisées, les fichiers touchés et les étapes suivantes.
 
 ## Journal de bord
+
+### 2026-10-07 — Claude — Code d'accès
+- Ajout d'un code d'accès (`middleware.ts`, `lib/acces.ts`, `app/acces/page.tsx`, `app/api/acces/route.ts`) : pages et Server Actions protégées (POST sans cookie = 401), cookie HttpOnly de 90 jours contenant une empreinte du code, jamais le code.
+- Actif seulement si la variable `ACCESS_CODE` est définie dans Vercel ; sans elle, l'app reste ouverte comme avant.
+- Vérifié : `npx tsc --noEmit`, `npm run build`, essais locaux (redirection vers /acces, 401 sur POST, mauvais code refusé, bon code accepté, icônes publiques servies, app ouverte sans variable).
+- Prochaine étape : Jonathan ajoute `ACCESS_CODE` dans Vercel (Settings → Environment Variables, Production) puis redéploie.
 ### 2026-10-06 — Claude — Interface : mobile, lisibilité, répartition des notes (skills frontend-design, dataviz, webapp-testing)
 - Mobile : la barre latérale (236 px) occupait ~60 % d'un écran de téléphone → remplacée sous 768 px par une barre d'onglets fixe en bas (icônes + libellés courts, zone de sécurité iOS) ; marges de page réduites (`components/sidebar-nav.tsx`, `app/**/page.tsx`).
 - Bug visuel corrigé : l'arche des cartes (46 px) dépassait le padding (34 px) et chevauchait les titres → arche 40 × 26 px, padding 42 px (`app/globals.css`).
