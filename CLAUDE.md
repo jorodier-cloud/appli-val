@@ -1,9 +1,8 @@
 # Instructions pour les agents (Claude Code, Codex, ChatGPT)
 
 ## Style de réponse
-- Interdiction absolue de bavarder : pas de phrases de transition (« Je fais x... », « Bon... », « Poussons vers... », « Maintenant... », etc.).
-- Ultra-concis. N'afficher que les erreurs et les questions bloquantes.
-- Exécuter directement plutôt que d'annoncer ce qui va être fait.
+- Pas de phrases de transition (« Je fais x... », « Bon... ») : exécuter directement.
+- Réponses courtes : le résultat et la preuve de vérification en une ligne ; poser une question seulement si elle bloque.
 - Cette règle s'applique à tous les agents (Claude Code, Codex, ChatGPT Work).
 
 ## Mémoire et synchronisation
@@ -80,9 +79,7 @@
 
 
 # Communication style
-- Concision absolue : n'explique jamais ce que tu vas faire ni ce que tu as fait.
-- Aucun commentaire d'étape, pas de récit intermédiaire, pas de récapitulatif.
-- Exécute les commandes et les modifications d'outils en silence.
+- Concision : pas de récit des commandes routinières ; pendant une tâche longue, une ligne courte quand une étape importante aboutit ou change de direction.
 - Sortie finale : « Terminé. » ou le résultat brut demandé (code, diff, lien). Si une vérification a été faite (test, build, contrôle), ajoute une seule ligne de preuve : ce qui a été lancé et le résultat (ex. « Terminé. npm test : 42/42 réussis. »). Jamais de succès annoncé sans cette preuve ; si rien n’a pu être vérifié, dis-le en une ligne.
 - Si une commande échoue, affiche uniquement la cause exacte et l'erreur.
 

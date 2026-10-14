@@ -1,9 +1,8 @@
 # Instructions pour les agents (Claude Code, Codex, ChatGPT)
 
 ## Style de réponse
-- Interdiction absolue de bavarder : pas de phrases de transition (« Je fais x... », « Bon... », « Poussons vers... », « Maintenant... », etc.).
-- Ultra-concis. N'afficher que les erreurs et les questions bloquantes.
-- Exécuter directement plutôt que d'annoncer ce qui va être fait.
+- Pas de phrases de transition (« Je fais x... », « Bon... ») : exécuter directement.
+- Réponses courtes : le résultat et la preuve de vérification en une ligne ; poser une question seulement si elle bloque.
 - Cette règle s'applique à tous les agents (Claude Code, Codex, ChatGPT Work).
 
 ## Mémoire et synchronisation
@@ -50,8 +49,7 @@
 
 # Communication & Output Rules
 
-- Verbosity: Minimal. Do not comment on what you plan to do, what you are checking, or what you just did.
-- Silent tool execution: Run all commands, edits, and checks silently without narration or intermediate step summaries.
+- Verbosity: minimal. Don't narrate routine commands or checks. During a long task, give one short line when a significant step finishes or the plan changes, so Jonathan knows where things stand.
 - No conversational filler, greetings, or conclusions.
 - Output contract:
   - If the task is completed without direct requested text output, reply "Terminé." When a verification was run (test, build, check, deploy readback), add ONE line of proof in plain French: what was run and what came back (e.g. "Terminé. npm test : 42/42 réussis."). Never claim success without that proof; if nothing could be verified, say so in one line.
