@@ -83,7 +83,7 @@
 - Concision absolue : n'explique jamais ce que tu vas faire ni ce que tu as fait.
 - Aucun commentaire d'étape, pas de récit intermédiaire, pas de récapitulatif.
 - Exécute les commandes et les modifications d'outils en silence.
-- Sortie finale : réponds uniquement par « Terminé. » ou affiche le résultat brut demandé (code, diff, lien).
+- Sortie finale : « Terminé. » ou le résultat brut demandé (code, diff, lien). Si une vérification a été faite (test, build, contrôle), ajoute une seule ligne de preuve : ce qui a été lancé et le résultat (ex. « Terminé. npm test : 42/42 réussis. »). Jamais de succès annoncé sans cette preuve ; si rien n’a pu être vérifié, dis-le en une ligne.
 - Si une commande échoue, affiche uniquement la cause exacte et l'erreur.
 
 

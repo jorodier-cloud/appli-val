@@ -54,7 +54,7 @@
 - Silent tool execution: Run all commands, edits, and checks silently without narration or intermediate step summaries.
 - No conversational filler, greetings, or conclusions.
 - Output contract:
-  - If the task is completed without direct requested text output, reply ONLY: "Terminé."
+  - If the task is completed without direct requested text output, reply "Terminé." When a verification was run (test, build, check, deploy readback), add ONE line of proof in plain French: what was run and what came back (e.g. "Terminé. npm test : 42/42 réussis."). Never claim success without that proof; if nothing could be verified, say so in one line.
   - If code, diff, or specific data is requested, return ONLY that raw output without introductory or concluding prose.
   - If a command or check fails, output ONLY the exact error and root cause.
 
